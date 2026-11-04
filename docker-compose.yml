@@ -1,0 +1,75 @@
+services:
+  proxy:
+    image: 'jc21/nginx-proxy-manager:latest'
+    hostname: proxy
+    container_name: proxy
+    restart: always
+    pull_policy: always
+    dns:
+      - ${dns}
+    environment:
+      - DISABLE_IPV6=true
+      - INITIAL_ADMIN_EMAIL=me@example.com # change me
+      - INITIAL_ADMIN_PASSWORD=123456789 # change me
+      - TZ="America/Caracas"
+    ports:
+      - "80:80"
+      - "443:443"
+      - '81:81'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+      - ./fallback_error.log:/data/logs/fallback_error.log
+    healthcheck:
+      test: ["CMD", "/usr/bin/check-health"]
+      interval: 10s
+      timeout: 3s
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    hostname: wordpress
+    pull_policy: always
+    restart: always
+    dns:
+      - ${dns}
+    ports:
+      - 8181:80
+    environment:
+      - WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+    depends_on:
+      - db
+      - redis
+    links:
+      - "redis"
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./themes:/var/www/html/wp-content/themes/
+      - ./plugins:/var/www/html/wp-content/plugins/
+
+  redis:
+    image: eqalpha/keydb:latest
+    container_name: redis
+    hostname: redis
+    pull_policy: always
+    restart: always
+    volumes:
+      - ./redis:/data
+
+  db:
+    image: mysql:8.0.39
+    container_name: db_wordpress
+    hostname: db_wordpress
+    pull_policy: always
+    restart: always
+    environment:
+      - MYSQL_DATABASE=${WORDPRESS_DB_NAME}
+      - MYSQL_USER=${WORDPRESS_DB_USER}
+      - MYSQL_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - MYSQL_RANDOM_ROOT_PASSWORD="1"
+    volumes:
+      - ./db:/var/lib/mysql
+
