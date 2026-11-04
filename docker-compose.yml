@@ -9,9 +9,9 @@ services:
       - ${dns}
     environment:
       - DISABLE_IPV6=true
-      - INITIAL_ADMIN_EMAIL=me@example.com # change me
-      - INITIAL_ADMIN_PASSWORD=123456789 # change me
-      - TZ="America/Caracas"
+      - INITIAL_ADMIN_EMAIL=${INITIAL_ADMIN_EMAIL}
+      - INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD}
+      - TZ=${TZ}
     ports:
       - "80:80"
       - "443:443"
